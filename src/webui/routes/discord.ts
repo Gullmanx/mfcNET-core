@@ -80,7 +80,8 @@ discordRouter.get('/auth/discord', (req, res) => {
     return res.redirect('/login');
   }
 
-  const redirectUri = encodeURIComponent(`http://${req.get('host')}/auth/discord/callback`);
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const redirectUri = encodeURIComponent(`${protocol}://${req.get('host')}/auth/discord/callback`);
   const url = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.discord_client_id}&redirect_uri=${redirectUri}&response_type=code&scope=identify&state=${state}`;
   res.redirect(url);
 });
@@ -95,7 +96,8 @@ discordRouter.get(
       return res.redirect('/login');
     }
 
-    const redirectUri = `http://${req.get('host')}/auth/discord/callback`;
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const redirectUri = `${protocol}://${req.get('host')}/auth/discord/callback`;
 
     // 1. Exchange code for token
     const tokenData = await httpsPost(

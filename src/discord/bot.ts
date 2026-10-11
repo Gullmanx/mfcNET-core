@@ -6,6 +6,7 @@ import { CONFIG } from '../utils/ArgConfig';
 import { prewarmJacketRoots } from '../utils/sdvx_jacket_resolver';
 import { handleRecentScoreCommand } from './commands/rs';
 import { handleBest50Command } from './commands/b50';
+import { handleResetPasswordCommand } from './commands/resetpassword';
 
 let client: Client | null = null;
 
@@ -28,7 +29,14 @@ const commands = [
     .addStringOption(option =>
       option.setName('user')
         .setDescription('RyuNET username')
-        .setRequired(true))
+        .setRequired(true)),
+  new SlashCommandBuilder()
+    .setName('resetpassword')
+    .setDescription('Reset your RyuNET account password')
+    .addStringOption(option =>
+      option.setName('new_password')
+        .setDescription('Optional new password (min 4 characters). If omitted, a temporary one is generated.')
+        .setRequired(false)),
 ];
 
 /**
@@ -125,7 +133,7 @@ export async function StartDiscordBot() {
   client.on('interactionCreate', async (interaction: Interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
-    if (interaction.commandName === 'rs' || interaction.commandName === 'b50') {
+    if (interaction.commandName === 'rs' || interaction.commandName === 'b50' || interaction.commandName === 'resetpassword') {
       // Per-user cooldown: reply immediately (ephemeral) instead of queuing work
       const now = Date.now();
       const cdKey = `${interaction.user.id}:${interaction.commandName}`;
@@ -147,8 +155,10 @@ export async function StartDiscordBot() {
 
       if (interaction.commandName === 'rs') {
         await safeExecute('rs', interaction, handleRecentScoreCommand);
-      } else {
+      } else if (interaction.commandName === 'b50') {
         await safeExecute('b50', interaction, handleBest50Command);
+      } else if (interaction.commandName === 'resetpassword') {
+        await safeExecute('resetpassword', interaction, handleResetPasswordCommand);
       }
     }
   });
