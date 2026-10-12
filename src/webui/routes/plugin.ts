@@ -152,7 +152,11 @@ pluginRouter.get(
     if (!plugin) return next();
 
     const file = path.join(PLUGIN_PATH, plugin.Identifier, 'webui', dataPath);
-    res.sendFile(file, {}, err => { if (err) next(); });
+    res.sendFile(file, {}, err => {
+      if (err && !res.headersSent) {
+        next();
+      }
+    });
   })
 );
 
